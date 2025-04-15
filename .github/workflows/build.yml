@@ -1,0 +1,44 @@
+name: Build vendor image for dipper
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y openjdk-11-jdk bc bison build-essential curl flex git gnupg gperf libncurses5-dev libssl-dev libxml2-utils repo unzip zip zlib1g-dev python-is-python3 ccache
+
+    - name: Setup repo and sync
+      run: |
+        mkdir lineage && cd lineage
+        repo init -u https://github.com/LineageOS/android.git -b lineage-20.0
+        repo sync -c --no-tags --no-clone-bundle -j4
+
+    - name: Clone device, vendor, kernel trees
+      run: |
+        cd lineage
+        git clone https://github.com/LineageOS/android_device_xiaomi_dipper -b lineage-20.0 device/xiaomi/dipper
+        git clone https://github.com/dipper-419/vendor_xiaomi_dipper -b lineage-21 vendor/xiaomi/dipper
+        git clone https://github.com/LineageOS/android_kernel_xiaomi_sdm845 -b lineage-20.0 kernel/xiaomi/sdm845
+
+    - name: Setup env and build vendor image
+      run: |
+        cd lineage
+        source build/envsetup.sh
+        lunch lineage_dipper-userdebug
+        make vendorimage -j$(nproc)
+
+    - name: Upload vendor.img
+      uses: actions/upload-artifact@v3
+      with:
+        name: vendor-img
+        path: lineage/out/target/product/dipper/vendor.img
