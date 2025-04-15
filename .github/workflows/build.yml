@@ -42,3 +42,4 @@ jobs:
       with:
         name: vendor-img
         path: lineage/out/target/product/dipper/vendor.img
+        retention-days: 1
