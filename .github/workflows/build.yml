@@ -38,7 +38,7 @@ jobs:
         make vendorimage -j$(nproc)
 
     - name: Upload vendor.img
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2
       with:
         name: vendor-img
         path: lineage/out/target/product/dipper/vendor.img
